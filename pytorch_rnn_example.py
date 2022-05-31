@@ -8,6 +8,11 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, Dataset
 
+device = torch.device("cpu")
+if torch.cuda.is_available():
+    print('"{}" GPU is available'.format(torch.cuda.get_device_name(0)))
+    device = torch.device("cuda:0")
+
 class RNNCell(nn.Module):
     
     def __init__(self, inputSize, hiddenSize, outputSize):
@@ -71,18 +76,21 @@ class RNN(nn.Module):
                           batch_first=True) #inputs and outputs are  (batch, seq, feature)
         self.linear = nn.Linear(hiddenSize,1)
         
-    def forward(self,x,hState):
+    def forward(self, x, hState):
         x, h = self.RNN(x,hState)
         out = self.linear(x[:,-1,:]) # gets last output
         return out
 
 # Create our network instance, pick loss function and optimizer
-model = RNN(1,hiddenSize,numLayers)
+model = RNN(1, hiddenSize, numLayers)
 lossFn = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learningRate)
 
+# Move model to device
+model = model.to(device)
+
 # Check output to see if everything is setup correctly
-ytest = model(torch.randn(batchSize,sequenceLength,1),torch.zeros([numLayers, batchSize, hiddenSize]))
+ytest = model(torch.randn(batchSize, sequenceLength, 1).to(device), torch.zeros([numLayers, batchSize, hiddenSize]).to(device))
 ytest.shape
 
 # Train the model
@@ -90,18 +98,18 @@ model.train()
 lossHistory = []
 for epoch in range(epochs):
     lossTotal = 0
-    for x,y in dataLoader:
+    for x, y in dataLoader:
         hState = torch.zeros([numLayers, batchSize, hiddenSize])
-        yhat= model(x.reshape([batchSize,sequenceLength, 1]),hState)
+        yhat= model(x.reshape([batchSize,sequenceLength, 1]).to(device), hState.to(device))
         
-        loss = lossFn(yhat.view(-1),y)
+        loss = lossFn(yhat.view(-1).to(device), y.to(device))
         
         model.zero_grad()
         loss.backward()
         optimizer.step()
         
-        lossTotal +=loss
-    lossHistory.append(lossTotal.detach().numpy())
+        lossTotal += loss
+    lossHistory.append(lossTotal.cpu().detach().numpy())
     print(lossTotal.item())
         
 plt.plot(lossHistory)
@@ -113,5 +121,5 @@ print(X[:sequenceLength])
 print(X[sequenceLength+1])
 
 model.eval()
-model(X[:sequenceLength].reshape(1,sequenceLength,1),torch.zeros([numLayers, 1, hiddenSize]))
+model(X[:sequenceLength].reshape(1,sequenceLength,1).to(device), torch.zeros([numLayers, 1, hiddenSize]).to(device))
 
