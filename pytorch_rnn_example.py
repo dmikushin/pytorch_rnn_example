@@ -1,19 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
-
-
 import torch
 import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, Dataset
-
-
-# In[48]:
-
 
 class RNNCell(nn.Module):
     
@@ -32,18 +25,10 @@ class RNNCell(nn.Module):
         
         return output, self.h
 
-
-# In[49]:
-
-
 X = torch.sin(torch.linspace(0,100,100000))
 plt.plot(X)
 plt.ylabel('Sin x')
 plt.xlabel('x')
-
-
-# In[50]:
-
 
 class RNNData(Dataset):
     def __init__(self, X, sequenceLength):
@@ -60,21 +45,13 @@ class RNNData(Dataset):
         y = self.X[index+self.sequenceLength+1]
         return sequence, y
 
-
-# In[51]:
-
-
-#hyperparameters
+# Hyperparameters
 batchSize = 100 
 sequenceLength = 50
 numLayers = 1
 hiddenSize = 4
 learningRate = 0.01
 epochs = 100
-
-
-# In[52]:
-
 
 data = RNNData(X,sequenceLength)
 dataLoader = DataLoader(data, batch_size=batchSize, shuffle=True)
@@ -83,11 +60,7 @@ for x,y in dataLoader:
     print(y)
     break
 
-
-# In[53]:
-
-
-# create our RNN based network with an RNN followed by a linear layer
+# Create our RNN based network with an RNN followed by a linear layer
 class RNN(nn.Module):
     def __init__(self, inputSize, hiddenSize, numLayers):
         super().__init__()
@@ -103,28 +76,16 @@ class RNN(nn.Module):
         out = self.linear(x[:,-1,:]) # gets last output
         return out
 
-
-# In[54]:
-
-
-# create our network instance, pick loss function and optimizer
+# Create our network instance, pick loss function and optimizer
 model = RNN(1,hiddenSize,numLayers)
 lossFn = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learningRate)
 
-
-# In[55]:
-
-
-# check output to see if everything is setup correctly
+# Check output to see if everything is setup correctly
 ytest = model(torch.randn(batchSize,sequenceLength,1),torch.zeros([numLayers, batchSize, hiddenSize]))
 ytest.shape
 
-
-# In[56]:
-
-
-# train the model!
+# Train the model
 model.train()
 lossHistory = []
 for epoch in range(epochs):
@@ -148,23 +109,9 @@ plt.title('Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 
-
-# In[57]:
-
-
 print(X[:sequenceLength])
 print(X[sequenceLength+1])
 
-
-# In[58]:
-
-
 model.eval()
 model(X[:sequenceLength].reshape(1,sequenceLength,1),torch.zeros([numLayers, 1, hiddenSize]))
-
-
-# In[ ]:
-
-
-
 
