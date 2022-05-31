@@ -140,7 +140,7 @@ for epoch in range(epochs):
         optimizer.step()
         
         lossTotal +=loss
-    lossHistory.append(lossTotal)
+    lossHistory.append(lossTotal.detach().numpy())
     print(lossTotal.item())
         
 plt.plot(lossHistory)
