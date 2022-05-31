@@ -9,7 +9,8 @@ Setup MIOpen-tailored PyTorch in a virtual environment:
 ```
 python3 -m venv ./venv
 source venv/bin/activate.fish
-pip3 install torch torchvision --extra-index-url https://download.pytorch.org/whl/rocm4.5.2
+pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/rocm4.5.2
+pip install matplotlib
 ```
 
 ## Running
